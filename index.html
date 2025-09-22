@@ -441,9 +441,17 @@
                 <button onclick="closeVideoModal()" class="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
                     ✕
                 </button>
-                <video id="videoPlayer" class="w-full" controls="" preload="none">
-                    <source src="/assets/video/example.mp4" type="video/mp4">
-                    您的浏览器不支持视频播放
+                <video id="videoPlayer"
+       class="w-full max-h-[80vh]"
+       controls
+       preload="metadata"
+       playsinline
+       poster="/assets/img/video-poster.jpg">
+  <!-- 加上 ?v=1 可以绕过缓存；没有海报就先删掉 poster 这一行 -->
+  <source src="/assets/video/example.mp4?v=1" type="video/mp4">
+  您的浏览器不支持视频播放。
+</video>
+
                 </video>
             </div>
         </div>
@@ -451,19 +459,27 @@
 
     <script>
         // 视频弹窗功能
-        function openVideoModal() {
-            const modal = document.getElementById('videoModal');
-            const video = document.getElementById('videoPlayer');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            video.play();
-        }
+      function openVideoModal() {
+  const modal = document.getElementById('videoModal');
+  const video = document.getElementById('videoPlayer');
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  // 先加载元数据，让浏览器显示时长；不要强制自动播放，避免策略拦截
+  video.load();
+  // 如果你希望自动播，可试试静音自动播（多数浏览器允许）：
+  // video.muted = true; video.play().catch(()=>{ /* 忽略 */ });
+}
 
-        function closeVideoModal() {
-            const modal = document.getElementById('videoModal');
-            const video = document.getElementById('videoPlayer');
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
+function closeVideoModal() {
+  const modal = document.getElementById('videoModal');
+  const video = document.getElementById('videoPlayer');
+  // 关闭时暂停并重置，避免下次打开黑屏或卡帧
+  video.pause();
+  video.currentTime = 0;
+  modal.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
             video.pause();
             video.currentTime = 0;
         }
@@ -482,6 +498,19 @@
             }
         });
     </script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const v = document.getElementById('videoPlayer');
+    if (!v) return;
+    v.addEventListener('error', () => {
+      const code = v.error && v.error.code;
+      alert('视频加载失败（错误码 ' + (code || '未知') + '）。请检查：\
+1) /assets/video/example.mp4 是否存在；\
+2) 文件名大小写；\
+3) 刷新缓存后重试。');
+    });
+  });
+</script>
 
  
 
